@@ -65,6 +65,13 @@ const Login = () => {
         />
 
         <button type="submit" style={styles.button}>Iniciar sesión</button>
+        <button
+            type="button"
+            style={{ ...styles.button, backgroundColor: '#0d6efd', marginTop: '1rem' }}
+            onClick={() => navigate("/register")}
+            >
+            Registrarse
+        </button>
       </form>
 
       {error && <p style={styles.error}>{error}</p>}
