@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API1, API2 } from '../Services/Api';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Bar, Pie, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   BarElement,
@@ -9,9 +9,11 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  LineElement,
+  PointElement
 } from 'chart.js';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement);
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement, LineElement, PointElement);
 
 const Logs = () => {
   const [logs1, setLogs1] = useState([]);
@@ -47,17 +49,29 @@ const Logs = () => {
     return tiempos.length > 0 ? Math.round(total / tiempos.length) : 0;
   };
 
-  const maxPeticiones10Min = (logs) => {
-    const timestamps = logs.map(log => new Date(log.timestamp).getTime()).sort();
-    let max = 0;
-    for (let i = 0; i < timestamps.length; i++) {
-      let count = 1;
-      for (let j = i + 1; j < timestamps.length && timestamps[j] - timestamps[i] <= 10 * 60 * 1000; j++) {
-        count++;
-      }
-      if (count > max) max = count;
-    }
-    return max;
+  const generarLinePromedio = () => {
+    const promedio1 = promedioRespuesta(logs1);
+    const promedio2 = promedioRespuesta(logs2);
+
+    return {
+      labels: ['Promedio Tiempo de Respuesta'],
+      datasets: [
+        {
+          label: 'Servidor 2',
+          data: [promedio1],
+          borderColor: '#0d6efd',
+          backgroundColor: '#0d6efd',
+          tension: 0.3
+        },
+        {
+          label: 'Servidor 1',
+          data: [promedio2],
+          borderColor: '#198754',
+          backgroundColor: '#198754',
+          tension: 0.3
+        }
+      ]
+    };
   };
 
   const generarDataBar = (titulo, data1, data2) => {
@@ -66,12 +80,12 @@ const Logs = () => {
       labels: todasLasClaves,
       datasets: [
         {
-          label: 'Servidor 1',
+          label: 'Servidor 2',
           data: todasLasClaves.map(k => data1[k] || 0),
           backgroundColor: '#0d6efd',
         },
         {
-          label: 'Servidor 2',
+          label: 'Servidor 1',
           data: todasLasClaves.map(k => data2[k] || 0),
           backgroundColor: '#198754',
         }
@@ -116,21 +130,21 @@ const Logs = () => {
       case 'servidor1':
         return (
           <>
-            {renderCard('📊 Logs Servidor 1 - Niveles', <Bar data={generarDataBar('Niveles', niveles1, {})} />)}
+            {renderCard('📊 Logs Servidor 2 - Niveles', <Bar data={generarDataBar('Niveles', niveles1, {})} />)}
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', metodos1, {})} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', status1, {})} />)}
             {renderCard('🧠 Distribución de Niveles', <Pie data={generarDataPie(niveles1)} />)}
-            {renderCard('⏱️ Tiempo Promedio de Respuesta', <p>{promedioRespuesta(logs1)} ms</p>)}
+            {renderCard('📈 Promedio Tiempo de Respuesta', <Line data={generarLinePromedio()} />)}
           </>
         );
       case 'servidor2':
         return (
           <>
-            {renderCard('📊 Logs Servidor 2 - Niveles', <Bar data={generarDataBar('Niveles', {}, niveles2)} />)}
+            {renderCard('📊 Logs Servidor 1 - Niveles', <Bar data={generarDataBar('Niveles', {}, niveles2)} />)}
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', {}, metodos2)} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', {}, status2)} />)}
             {renderCard('🧠 Distribución de Niveles', <Pie data={generarDataPie(niveles2)} />)}
-            {renderCard('⏱️ Tiempo Promedio de Respuesta', <p>{promedioRespuesta(logs2)} ms</p>)}
+            {renderCard('📈 Promedio Tiempo de Respuesta', <Line data={generarLinePromedio()} />)}
           </>
         );
       default:
@@ -139,20 +153,9 @@ const Logs = () => {
             {renderCard('📊 Comparativa de Logs por Nivel', <Bar data={generarDataBar('Niveles', niveles1, niveles2)} />)}
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', metodos1, metodos2)} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', status1, status2)} />)}
-            {renderCard('🧠 Distribución de Niveles (Servidor 1)', <Pie data={generarDataPie(niveles1)} />)}
-            {renderCard('🧠 Distribución de Niveles (Servidor 2)', <Pie data={generarDataPie(niveles2)} />)}
-            {renderCard('🚀 Máx. peticiones en 10 min (S1 y S2)',
-              <>
-                <p>Servidor 1: {maxPeticiones10Min(logs1)} peticiones</p>
-                <p>Servidor 2: {maxPeticiones10Min(logs2)} peticiones</p>
-              </>
-            )}
-            {renderCard('⏱️ Tiempo Promedio de Respuesta',
-              <>
-                <p>Servidor 1: {promedioRespuesta(logs1)} ms</p>
-                <p>Servidor 2: {promedioRespuesta(logs2)} ms</p>
-              </>
-            )}
+            {renderCard('🧠 Distribución de Niveles (Servidor 2)', <Pie data={generarDataPie(niveles1)} />)}
+            {renderCard('🧠 Distribución de Niveles (Servidor 1)', <Pie data={generarDataPie(niveles2)} />)}
+            {renderCard('📈 Promedio Tiempo de Respuesta', <Line data={generarLinePromedio()} />)}
           </>
         );
     }
@@ -165,8 +168,8 @@ const Logs = () => {
         Selecciona servidor:
         <select value={servidorSeleccionado} onChange={(e) => setServidorSeleccionado(e.target.value)} style={{ marginLeft: '1rem' }}>
           <option value="todos">Todos</option>
-          <option value="servidor1">Servidor 1</option>
-          <option value="servidor2">Servidor 2</option>
+          <option value="servidor1">Servidor 2</option>
+          <option value="servidor2">Servidor 1</option>
         </select>
       </label>
       {renderGraficas()}
