@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { API1 } from '../Services/Api';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -16,6 +17,20 @@ const Home = () => {
     }
   }
 
+  const [serverInfo, setServerInfo] = useState({});
+
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const res = await API1.get('/getInfo');
+        setServerInfo(res.data);
+      } catch (error) {
+        console.error("Error al obtener info del servidor", error);
+      }
+    };
+    fetchInfo();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -26,8 +41,14 @@ const Home = () => {
       <h1 style={styles.title}>Bienvenido a la Plataforma de Seguridad</h1>
       <div style={styles.card}>
         <p><strong>Alumno:</strong> Uriel Isaí Ortiz Pérez</p>
-        <p><strong> Grupo:</strong> IDGS11</p>
-        <p><strong> Docente:</strong> Emmanuel Martínez Hernández</p>
+        <p><strong>Grupo:</strong> IDGS11</p>
+        <p><strong>Docente:</strong> Emmanuel Martínez Hernández</p>
+        {serverInfo?.nodeVersion && (
+          <>
+            <p><strong>Versión de Node:</strong> {serverInfo.nodeVersion}</p>
+            <p><strong>Mensaje del servidor:</strong> {serverInfo.mensaje}</p>
+          </>
+        )}
       </div>
 
       <p style={styles.description}>
