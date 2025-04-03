@@ -41,6 +41,12 @@ const Logs = () => {
     }, {});
   };
 
+  const promedioRespuesta = (logs) => {
+    const tiempos = logs.map(log => parseInt(log.responseTime?.replace('ms', '')) || 0);
+    const total = tiempos.reduce((acc, val) => acc + val, 0);
+    return tiempos.length > 0 ? Math.round(total / tiempos.length) : 0;
+  };
+
   const maxPeticiones10Min = (logs) => {
     const timestamps = logs.map(log => new Date(log.timestamp).getTime()).sort();
     let max = 0;
@@ -91,7 +97,6 @@ const Logs = () => {
 
   const niveles1 = contarPor(logs1, 'logLevel');
   const niveles2 = contarPor(logs2, 'logLevel');
-  
   const metodos1 = contarPor(logs1, 'method');
   const metodos2 = contarPor(logs2, 'method');
   const status1 = contarPor(logs1, 'statusCode');
@@ -115,6 +120,7 @@ const Logs = () => {
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', metodos1, {})} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', status1, {})} />)}
             {renderCard('🧠 Distribución de Niveles', <Pie data={generarDataPie(niveles1)} />)}
+            {renderCard('⏱️ Tiempo Promedio de Respuesta', <p>{promedioRespuesta(logs1)} ms</p>)}
           </>
         );
       case 'servidor2':
@@ -124,7 +130,8 @@ const Logs = () => {
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', {}, metodos2)} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', {}, status2)} />)}
             {renderCard('🧠 Distribución de Niveles', <Pie data={generarDataPie(niveles2)} />)}
-\          </>
+            {renderCard('⏱️ Tiempo Promedio de Respuesta', <p>{promedioRespuesta(logs2)} ms</p>)}
+          </>
         );
       default:
         return (
@@ -138,6 +145,12 @@ const Logs = () => {
               <>
                 <p>Servidor 1: {maxPeticiones10Min(logs1)} peticiones</p>
                 <p>Servidor 2: {maxPeticiones10Min(logs2)} peticiones</p>
+              </>
+            )}
+            {renderCard('⏱️ Tiempo Promedio de Respuesta',
+              <>
+                <p>Servidor 1: {promedioRespuesta(logs1)} ms</p>
+                <p>Servidor 2: {promedioRespuesta(logs2)} ms</p>
               </>
             )}
           </>
