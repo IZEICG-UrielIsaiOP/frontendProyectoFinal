@@ -43,31 +43,25 @@ const Logs = () => {
     }, {});
   };
 
-  const promedioRespuesta = (logs) => {
-    const tiempos = logs.map(log => parseInt(log.responseTime?.replace('ms', '')) || 0);
-    const total = tiempos.reduce((acc, val) => acc + val, 0);
-    return tiempos.length > 0 ? Math.round(total / tiempos.length) : 0;
-  };
-
-  const generarLinePromedio = () => {
-    const promedio1 = promedioRespuesta(logs1);
-    const promedio2 = promedioRespuesta(logs2);
+  const generarLineaTiempos = (logs1, logs2) => {
+    const data1 = logs1.map((log, index) => ({ x: index + 1, y: parseInt(log.responseTime?.replace('ms', '')) || 0 }));
+    const data2 = logs2.map((log, index) => ({ x: index + 1, y: parseInt(log.responseTime?.replace('ms', '')) || 0 }));
 
     return {
-      labels: ['Promedio Tiempo de Respuesta'],
+      labels: data1.map(p => `Petición ${p.x}`),
       datasets: [
         {
           label: 'Servidor 2',
-          data: [promedio1],
+          data: data1.map(p => p.y),
           borderColor: '#0d6efd',
-          backgroundColor: '#0d6efd',
+          backgroundColor: 'rgba(13,110,253,0.3)',
           tension: 0.3
         },
         {
           label: 'Servidor 1',
-          data: [promedio2],
+          data: data2.map(p => p.y),
           borderColor: '#198754',
-          backgroundColor: '#198754',
+          backgroundColor: 'rgba(25,135,84,0.3)',
           tension: 0.3
         }
       ]
@@ -134,7 +128,7 @@ const Logs = () => {
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', metodos1, {})} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', status1, {})} />)}
             {renderCard('🧠 Distribución de Niveles', <Pie data={generarDataPie(niveles1)} />)}
-            {renderCard('📈 Promedio Tiempo de Respuesta', <Line data={generarLinePromedio()} />)}
+            {renderCard('⏱️ Tiempo de Respuesta por Petición', <Line data={generarLineaTiempos(logs1, [])} />)}
           </>
         );
       case 'servidor2':
@@ -144,7 +138,7 @@ const Logs = () => {
             {renderCard('🔁 Métodos HTTP', <Bar data={generarDataBar('Métodos', {}, metodos2)} />)}
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', {}, status2)} />)}
             {renderCard('🧠 Distribución de Niveles', <Pie data={generarDataPie(niveles2)} />)}
-            {renderCard('📈 Promedio Tiempo de Respuesta', <Line data={generarLinePromedio()} />)}
+            {renderCard('⏱️ Tiempo de Respuesta por Petición', <Line data={generarLineaTiempos([], logs2)} />)}
           </>
         );
       default:
@@ -155,7 +149,7 @@ const Logs = () => {
             {renderCard('📦 Status Codes', <Bar data={generarDataBar('Status', status1, status2)} />)}
             {renderCard('🧠 Distribución de Niveles (Servidor 2)', <Pie data={generarDataPie(niveles1)} />)}
             {renderCard('🧠 Distribución de Niveles (Servidor 1)', <Pie data={generarDataPie(niveles2)} />)}
-            {renderCard('📈 Promedio Tiempo de Respuesta', <Line data={generarLinePromedio()} />)}
+            {renderCard('⏱️ Tiempo de Respuesta por Petición', <Line data={generarLineaTiempos(logs1, logs2)} />)}
           </>
         );
     }
